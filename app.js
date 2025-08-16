@@ -1,10 +1,82 @@
-const express = require("express");
-const app = express();
+const http = require('http');
+const fs = require('fs');
 
-app.get("/", (req, res) => {
-  res.send("Hello World");
-});
+const server = http
+.createServer((req, res) => {
+  //url
+  // const url = req.url;
+  // console.log(url);
 
-app.listen(3000, () => {
-  console.log("Server Running at http://localhost:3000");
-});
+  //abstraksi fs keluar. dan butuh path & res
+  const renderHTML = (path, res) => {
+      fs.readFile(path, (err, data) => {
+      if (err) {
+        res.writeHead(404);
+        res.write('Error : File Not found');
+      } else {
+        res.write(data);
+      }
+      res.end();
+    });
+  };
+
+
+  //writeHead
+  res.writeHead(200, {
+    'Content-Type': 'text/html',
+  });
+
+  //if url check
+  const url = req.url;
+  if (url === '/contact') {
+    // fs.readFile('./testcontact.html', (err, data) => {
+    //   if (err) {
+    //     res.writeHead(404);
+    //     res.write('Error : File Not found');
+    //   } else {
+    //     res.write(data);
+    //   }
+    //   res.end();
+    // });
+
+    renderHTML('./testcontact.html', res);
+
+    // res.write('<h1>Ini adalah halaman Contact</h1>');
+
+
+  } else if (url === '/about') {
+    // res.write('<h1>Ini adalah halaman About</h1>');
+
+    // fs.readFile('./testabout.html', (err, data)=>{
+    //   if (err) {
+    //     res.writeHead(404);
+    //     res.write('Error : File Not Found');
+    //   } else {
+    //     res.write(data);
+    //   }
+    //   res.end();
+    // });
+
+    renderHTML('./testabout.html', res);
+  }else {
+    // res.write('<h1>Hello World</h1>');
+
+    // fs.readFile('./testindex.html', (err, data) => {
+    //   if (err) {
+    //     res.writeHead(404);
+    //     res.write('Error : File Not Found');
+    //   } else {
+    //     res.write(data);
+    //   }
+    //   res.end();
+    // });
+
+
+    renderHTML('./testindex.html', res);
+  }
+
+
+})
+.listen(3000, () => {
+  console.log('server running on port 3000..');
+})
