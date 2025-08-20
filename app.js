@@ -1,82 +1,50 @@
-const http = require('http');
-const fs = require('fs');
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const server = http
-.createServer((req, res) => {
-  //url
-  // const url = req.url;
-  // console.log(url);
+// Menentukan __dirname di ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  //abstraksi fs keluar. dan butuh path & res
-  const renderHTML = (path, res) => {
-      fs.readFile(path, (err, data) => {
-      if (err) {
-        res.writeHead(404);
-        res.write('Error : File Not found');
-      } else {
-        res.write(data);
-      }
-      res.end();
-    });
-  };
+const app = express();
+const PORT = 3000;
 
+// Melayani file statis dari folder 'public'
+app.use(express.static(path.join(__dirname, 'public')));
 
-  //writeHead
-  res.writeHead(200, {
-    'Content-Type': 'text/html',
-  });
+app.set('view engine', 'ejs');
 
-  //if url check
-  const url = req.url;
-  if (url === '/contact') {
-    // fs.readFile('./testcontact.html', (err, data) => {
-    //   if (err) {
-    //     res.writeHead(404);
-    //     res.write('Error : File Not found');
-    //   } else {
-    //     res.write(data);
-    //   }
-    //   res.end();
-    // });
+// Route untuk halaman utama
+app.get('/', (req, res) => {
+    res.render('index');
+});
 
-    renderHTML('./testcontact.html', res);
+// Route untuk halaman about
+app.get('/about', (req, res) => {
+    res.render('testabout');
+});
 
-    // res.write('<h1>Ini adalah halaman Contact</h1>');
+// Route untuk halaman contact
+app.get('/contact', (req, res) => {
+    res.send('<h1>Ini adalah halaman Contact</h1>');
+});
 
+// Route untuk halaman personal
+app.get('/personal', (req, res) => {
+    res.send('<h1>Ini adalah Halaman Personal</h1>');
+});
 
-  } else if (url === '/about') {
-    // res.write('<h1>Ini adalah halaman About</h1>');
+// Route untuk product dengan parameter ID dan query category
+app.get('/product/:id/category', (req, res) => {
+    res.send(`Product ID : ${req.params.id} <br> Category ID : ${req.query.idCat}`);
+});
 
-    // fs.readFile('./testabout.html', (err, data)=>{
-    //   if (err) {
-    //     res.writeHead(404);
-    //     res.write('Error : File Not Found');
-    //   } else {
-    //     res.write(data);
-    //   }
-    //   res.end();
-    // });
+// Handle error 404
+app.use((req, res) => {
+    res.status(404).send('<h1>page not found</h1>');
+});
 
-    renderHTML('./testabout.html', res);
-  }else {
-    // res.write('<h1>Hello World</h1>');
-
-    // fs.readFile('./testindex.html', (err, data) => {
-    //   if (err) {
-    //     res.writeHead(404);
-    //     res.write('Error : File Not Found');
-    //   } else {
-    //     res.write(data);
-    //   }
-    //   res.end();
-    // });
-
-
-    renderHTML('./testindex.html', res);
-  }
-
-
-})
-.listen(3000, () => {
-  console.log('server running on port 3000..');
-})
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server Running at port https://localhost:${PORT}`);
+});
