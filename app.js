@@ -1,59 +1,82 @@
-import express from "express";
-import path from "path";
-import { fileURLToPath } from "url";
-
-// Menentukan __dirname di ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import express from 'express';
+import Product from './models/Product.js';
+import sequelize from './db.js';
 
 const app = express();
-const PORT = 3000;
+app.use(express.json());
 
-// Melayani file statis dari folder 'public'
-app.use(express.static(path.join(__dirname, "public")));
-
-app.set("view engine", "ejs");
-
-// Route untuk halaman utama
-app.get("/", (req, res) => {
-  res.render("index", {
-    title: "Beranda",
-  });
+//CREATE : Menambahkan produk baru
+app.post('/product', async (req,res) => {
+    try {
+      const { name, price } = req.body;
+      const product = await Product.create({ name,price });
+      res.status(201).json(product);
+    } catch (error) {
+        res.status(500).json({ message : 'Error creating product', error });
+    }
 });
 
-// Route untuk halaman about
-app.get("/about", (req, res) => {
-  res.render("testabout", {
-    title: "About",
-  });
+//Read
+// READ: Mendapatkan semua produk
+app.get('/products', async (req, res) => {
+  try {
+    const products = await Product.findAll();
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching products', error });
+  }
 });
 
-// Route untuk halaman contact
-app.get("/contact", (req, res) => {
-  // res.send('<h1>Ini adalah halaman Contact</h1>');
-  res.render("testcontact", {
-    title: "Contact",
-  });
+// READ by ID: Mendapatkan produk berdasarkan ID
+app.get('/products/:id', async (req, res) => {
+  try {
+    const product = await Product.findByPk(req.params.id);
+    if (product) {
+      res.status(200).json(product);
+    } else {
+      res.status(404).json({ message: 'Product not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching product', error });
+  }
 });
 
-// Route untuk halaman personal
-app.get("/personal", (req, res) => {
-  res.send("<h1>Ini adalah Halaman Personal</h1>");
+// UPDATE: Memperbarui produk
+app.put('/products/:id', async (req, res) => {
+  try {
+    const { name, price } = req.body;
+    const product = await Product.findByPk(req.params.id);
+    if (product) {
+      product.name = name;
+      product.price = price;
+      await product.save();
+      res.status(200).json(product);
+    } else {
+      res.status(404).json({ message: 'Product not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating product', error });
+  }
 });
 
-// Route untuk product dengan parameter ID dan query category
-app.get("/product/:id/category", (req, res) => {
-  res.send(
-    `Product ID : ${req.params.id} <br> Category ID : ${req.query.category}`
-  );
+// DELETE: Menghapus produk
+app.delete('/products/:id', async (req, res) => {
+  try {
+    const product = await Product.findByPk(req.params.id);
+    if (product) {
+      await product.destroy();
+      res.status(200).json({ message: 'Product deleted' });
+    } else {
+      res.status(404).json({ message: 'Product not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting product', error });
+  }
 });
 
-// Handle error 404
-app.use((req, res) => {
-  res.status(404).send("<h1>page not found</h1>");
-});
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server Running at port https://localhost:${PORT}`);
+// sync sequelize models with database
+sequelize.sync().then(() => {
+    app.listen(3000, () => {
+        console.log('Server Running on http://localhost:3000');
+    });
 });
